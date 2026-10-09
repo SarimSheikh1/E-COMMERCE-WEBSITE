@@ -1,0 +1,12 @@
+import mongoose from 'mongoose';
+const {Schema}=mongoose;
+export const User=mongoose.model('User',new Schema({name:{type:String,required:true},email:{type:String,unique:true,required:true},password:{type:String,required:true,select:false},role:{type:String,enum:['customer','admin'],default:'customer'},suspended:{type:Boolean,default:false},verified:{type:Boolean,default:false},addresses:{type:[Schema.Types.Mixed],default:[]},wishlist:{type:[String],default:[]}},{timestamps:true}));
+export const Session=mongoose.model('Session',new Schema({token:{type:String,unique:true},csrf:String,user:{type:Schema.Types.ObjectId,ref:'User'},expires:{type:Date,index:{expireAfterSeconds:0}}}));
+const variant=new Schema({sku:{type:String,required:true},size:{type:String,required:true},color:{type:String,required:true},price:{type:Number,min:0,required:true},stock:{type:Number,min:0,required:true}});
+export const Product=mongoose.model('Product',new Schema({name:{type:String,required:true},slug:{type:String,unique:true,required:true},description:String,category:String,images:[String],featured:{type:Boolean,default:false},status:{type:String,enum:['draft','active','archived'],default:'draft'},variants:[variant]},{timestamps:true}));
+Product.schema.index({name:'text',description:'text'});
+export const Cart=mongoose.model('Cart',new Schema({owner:{type:String,unique:true},items:{type:[new Schema({product:String,variant:String,quantity:{type:Number,min:1,max:99}},{_id:false})],default:[]}}));
+export const Order=mongoose.model('Order',new Schema({user:{type:Schema.Types.ObjectId,ref:'User'},key:{type:String,unique:true},items:[Schema.Types.Mixed],address:Schema.Types.Mixed,subtotal:Number,shipping:Number,discount:Number,total:Number,status:{type:String,enum:['placed','confirmed','shipped','delivered','cancelled'],default:'placed'},payment:{type:String,default:'pending'},tracking:String,stockRestored:{type:Boolean,default:false}},{timestamps:true}));
+export const Audit=mongoose.model('Audit',new Schema({actor:String,action:String,target:String,detail:Schema.Types.Mixed},{timestamps:true}));
+export const Coupon=mongoose.model('Coupon',new Schema({code:{type:String,unique:true},type:{type:String,enum:['fixed','percentage']},value:Number,minimum:Number,expires:Date,limit:Number,used:{type:Number,default:0},categories:[String]}));
+export const Ticket=mongoose.model('Ticket',new Schema({user:{type:Schema.Types.ObjectId,ref:'User'},subject:String,messages:[{text:String,author:String,date:Date}],status:{type:String,default:'open'}},{timestamps:true}));

@@ -1,0 +1,12 @@
+import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
+import {config} from './config.js';
+import {User} from './models.js';
+const password=process.env.ADMIN_PASSWORD;
+if(!password||password.length<12)throw new Error('Set private ADMIN_PASSWORD (at least 12 characters) before bootstrap.');
+await mongoose.connect(config.mongo);
+const email=(process.env.ADMIN_EMAIL||'sarimhatif1@gmail.com').toLowerCase();
+if(await User.exists({email}))throw new Error('Account exists. Bootstrap will not overwrite credentials or promote an existing account.');
+await User.create({name:'Store administrator',email,password:await bcrypt.hash(password,12),role:'admin',verified:true});
+console.log('Administrator created.');
+await mongoose.disconnect();
